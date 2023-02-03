@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
+	"google.golang.org/api/drive/v3"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -340,6 +342,12 @@ func aboutExportHandler(ctx cli.Context) {
 	checkErr(err)
 }
 
+func diskListHandler(ctx cli.Context) {
+	args := ctx.Args()
+	err := disk.New(newDriveService(args)).List()
+	checkErr(err)
+}
+
 func getOauthClient(args cli.Arguments) (*http.Client, error) {
 	if args.String("refreshToken") != "" && args.String("accessToken") != "" {
 		ExitF("Access token not needed when refresh token is provided")
@@ -396,6 +404,20 @@ func newDrive(args cli.Arguments) *client.DriveClient {
 	}
 
 	return client
+}
+
+func newDriveService(args cli.Arguments) *drive.Service {
+	oauth, err := getOauthClient(args)
+	if err != nil {
+		ExitF("Failed getting oauth client: %s", err.Error())
+	}
+
+	service, err := client.NewDriveService(oauth)
+	if err != nil {
+		ExitF("Failed getting drive service: %s", err.Error())
+	}
+
+	return service
 }
 
 func authCodePrompt(url string) func() string {

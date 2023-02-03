@@ -834,6 +834,16 @@ func main() {
 				cli.NewFlagGroup("global", globalFlags...),
 			},
 		},
+
+		&cli.Handler{
+			Pattern:     "[global] disk list",
+			Description: "disk list",
+			Callback:    diskListHandler,
+			FlagGroups: cli.FlagGroups{
+				cli.NewFlagGroup("global", globalFlags...),
+			},
+		},
+
 		&cli.Handler{
 			Pattern:     "version",
 			Description: "Print application version",
