@@ -1,4 +1,4 @@
-package drive
+package client
 
 import (
 	"google.golang.org/api/drive/v3"
