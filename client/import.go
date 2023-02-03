@@ -17,7 +17,7 @@ type ImportArgs struct {
 	Parents  []string
 }
 
-func (self *Drive) Import(args ImportArgs) error {
+func (self *DriveClient) Import(args ImportArgs) error {
 	fromMime := args.Mime
 	if fromMime == "" {
 		fromMime = getMimeType(args.Path)

@@ -41,7 +41,7 @@ const (
 	KeepLargest
 )
 
-func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp FileComparer) (*syncFiles, error) {
+func (self *DriveClient) prepareSyncFiles(localPath string, root *drive.File, cmp FileComparer) (*syncFiles, error) {
 	localCh := make(chan struct {
 		files []*LocalFile
 		err   error
@@ -85,7 +85,7 @@ func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp File
 	}, nil
 }
 
-func (self *Drive) isSyncFile(id string) (bool, error) {
+func (self *DriveClient) isSyncFile(id string) (bool, error) {
 	f, err := self.service.Files.Get(id).Fields("appProperties").Do()
 	if err != nil {
 		return false, fmt.Errorf("Failed to get file: %s", err)
@@ -152,7 +152,7 @@ func prepareLocalFiles(root string) ([]*LocalFile, error) {
 	return files, err
 }
 
-func (self *Drive) prepareRemoteFiles(rootDir *drive.File, sortOrder string) ([]*RemoteFile, error) {
+func (self *DriveClient) prepareRemoteFiles(rootDir *drive.File, sortOrder string) ([]*RemoteFile, error) {
 	// Find all files which has rootDir as root
 	listArgs := listAllFilesArgs{
 		query:     fmt.Sprintf("appProperties has {key='syncRootId' and value='%s'}", rootDir.Id),

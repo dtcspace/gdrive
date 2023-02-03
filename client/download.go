@@ -24,7 +24,7 @@ type DownloadArgs struct {
 	Timeout   time.Duration
 }
 
-func (self *Drive) Download(args DownloadArgs) error {
+func (self *DriveClient) Download(args DownloadArgs) error {
 	if args.Recursive {
 		return self.downloadRecursive(args)
 	}
@@ -74,7 +74,7 @@ type DownloadQueryArgs struct {
 	Recursive bool
 }
 
-func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
+func (self *DriveClient) DownloadQuery(args DownloadQueryArgs) error {
 	listArgs := listAllFilesArgs{
 		query:  args.Query,
 		fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,size,md5Checksum)"},
@@ -107,7 +107,7 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 	return nil
 }
 
-func (self *Drive) downloadRecursive(args DownloadArgs) error {
+func (self *DriveClient) downloadRecursive(args DownloadArgs) error {
 	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
@@ -123,7 +123,7 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 	return nil
 }
 
-func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
+func (self *DriveClient) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
@@ -168,7 +168,7 @@ type saveFileArgs struct {
 	progress      io.Writer
 }
 
-func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
+func (self *DriveClient) saveFile(args saveFileArgs) (int64, int64, error) {
 	// Wrap response body in progress reader
 	srcReader := getProgressReader(args.body, args.progress, args.contentLength)
 
@@ -223,7 +223,7 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 	return bytes, rate, os.Rename(tmpPath, args.fpath)
 }
 
-func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {
+func (self *DriveClient) downloadDirectory(parent *drive.File, args DownloadArgs) error {
 	listArgs := listAllFilesArgs{
 		query:  fmt.Sprintf("'%s' in parents", parent.Id),
 		fields: []googleapi.Field{"nextPageToken", "files(id,name)"},

@@ -24,7 +24,7 @@ type UpdateArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *Drive) Update(args UpdateArgs) error {
+func (self *DriveClient) Update(args UpdateArgs) error {
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return fmt.Errorf("Failed to open file: %s", err)

@@ -384,7 +384,7 @@ func getConfigDir(args cli.Arguments) string {
 	return args.String("configDir")
 }
 
-func newDrive(args cli.Arguments) *client.Drive {
+func newDrive(args cli.Arguments) *client.DriveClient {
 	oauth, err := getOauthClient(args)
 	if err != nil {
 		ExitF("Failed getting oauth client: %s", err.Error())

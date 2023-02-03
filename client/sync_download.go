@@ -24,7 +24,7 @@ type DownloadSyncArgs struct {
 	Comparer         FileComparer
 }
 
-func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
+func (self *DriveClient) DownloadSync(args DownloadSyncArgs) error {
 	fmt.Fprintln(args.Out, "Starting sync...")
 	started := time.Now()
 
@@ -83,7 +83,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
 	return nil
 }
 
-func (self *Drive) getSyncRoot(rootId string) (*drive.File, error) {
+func (self *DriveClient) getSyncRoot(rootId string) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
 	f, err := self.service.Files.Get(rootId).Fields(fields...).Do()
 	if err != nil {
@@ -103,7 +103,7 @@ func (self *Drive) getSyncRoot(rootId string) (*drive.File, error) {
 	return f, nil
 }
 
-func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArgs) error {
+func (self *DriveClient) createMissingLocalDirs(files *syncFiles, args DownloadSyncArgs) error {
 	missingDirs := files.filterMissingLocalDirs()
 	missingCount := len(missingDirs)
 
@@ -131,7 +131,7 @@ func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArg
 	return nil
 }
 
-func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs) error {
+func (self *DriveClient) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs) error {
 	missingFiles := files.filterMissingLocalFiles()
 	missingCount := len(missingFiles)
 
@@ -155,7 +155,7 @@ func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs)
 	return nil
 }
 
-func (self *Drive) downloadChangedFiles(changedFiles []*changedFile, args DownloadSyncArgs) error {
+func (self *DriveClient) downloadChangedFiles(changedFiles []*changedFile, args DownloadSyncArgs) error {
 	changedCount := len(changedFiles)
 
 	if changedCount > 0 {
@@ -183,7 +183,7 @@ func (self *Drive) downloadChangedFiles(changedFiles []*changedFile, args Downlo
 	return nil
 }
 
-func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, try int) error {
+func (self *DriveClient) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, try int) error {
 	if args.DryRun {
 		return nil
 	}
@@ -248,7 +248,7 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
 	return os.Rename(tmpPath, fpath)
 }
 
-func (self *Drive) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyncArgs) error {
+func (self *DriveClient) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyncArgs) error {
 	extraneousFiles := files.filterExtraneousLocalFiles()
 	extraneousCount := len(extraneousFiles)
 

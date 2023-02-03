@@ -19,7 +19,7 @@ type DownloadRevisionArgs struct {
 	Timeout    time.Duration
 }
 
-func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
+func (self *DriveClient) DownloadRevision(args DownloadRevisionArgs) (err error) {
 	getRev := self.service.Revisions.Get(args.FileId, args.RevisionId)
 
 	rev, err := getRev.Fields("originalFilename").Do()

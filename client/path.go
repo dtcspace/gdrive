@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func (self *Drive) newPathfinder() *remotePathfinder {
+func (self *DriveClient) newPathfinder() *remotePathfinder {
 	return &remotePathfinder{
 		service: self.service.Files,
 		files:   make(map[string]*drive.File),

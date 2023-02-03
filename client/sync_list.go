@@ -14,7 +14,7 @@ type ListSyncArgs struct {
 	SkipHeader bool
 }
 
-func (self *Drive) ListSync(args ListSyncArgs) error {
+func (self *DriveClient) ListSync(args ListSyncArgs) error {
 	listArgs := listAllFilesArgs{
 		query:  "appProperties has {key='syncRoot' and value='true'}",
 		fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,createdTime)"},
@@ -36,7 +36,7 @@ type ListRecursiveSyncArgs struct {
 	SortOrder   string
 }
 
-func (self *Drive) ListRecursiveSync(args ListRecursiveSyncArgs) error {
+func (self *DriveClient) ListRecursiveSync(args ListRecursiveSyncArgs) error {
 	rootDir, err := self.getSyncRoot(args.RootId)
 	if err != nil {
 		return err

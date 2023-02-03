@@ -26,7 +26,7 @@ type UploadArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *Drive) Upload(args UploadArgs) error {
+func (self *DriveClient) Upload(args UploadArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}
@@ -82,7 +82,7 @@ func (self *Drive) Upload(args UploadArgs) error {
 	return nil
 }
 
-func (self *Drive) uploadRecursive(args UploadArgs) error {
+func (self *DriveClient) uploadRecursive(args UploadArgs) error {
 	info, err := os.Stat(args.Path)
 	if err != nil {
 		return fmt.Errorf("Failed stat file: %s", err)
@@ -99,7 +99,7 @@ func (self *Drive) uploadRecursive(args UploadArgs) error {
 	return nil
 }
 
-func (self *Drive) uploadDirectory(args UploadArgs) error {
+func (self *DriveClient) uploadDirectory(args UploadArgs) error {
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 	return nil
 }
 
-func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
+func (self *DriveClient) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return nil, 0, err
@@ -211,7 +211,7 @@ type UploadStreamArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *Drive) UploadStream(args UploadStreamArgs) error {
+func (self *DriveClient) UploadStream(args UploadStreamArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}

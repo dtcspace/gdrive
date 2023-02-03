@@ -24,7 +24,7 @@ type ExportArgs struct {
 	Force      bool
 }
 
-func (self *Drive) Export(args ExportArgs) error {
+func (self *DriveClient) Export(args ExportArgs) error {
 	f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
@@ -73,7 +73,7 @@ func (self *Drive) Export(args ExportArgs) error {
 	return nil
 }
 
-func (self *Drive) printMimes(out io.Writer, mimeType string) error {
+func (self *DriveClient) printMimes(out io.Writer, mimeType string) error {
 	about, err := self.service.About.Get().Fields("exportFormats").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get about: %s", err)

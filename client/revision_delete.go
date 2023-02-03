@@ -11,7 +11,7 @@ type DeleteRevisionArgs struct {
 	RevisionId string
 }
 
-func (self *Drive) DeleteRevision(args DeleteRevisionArgs) (err error) {
+func (self *DriveClient) DeleteRevision(args DeleteRevisionArgs) (err error) {
 	rev, err := self.service.Revisions.Get(args.FileId, args.RevisionId).Fields("originalFilename").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get revision: %s", err)

@@ -5,15 +5,15 @@ import (
 	"net/http"
 )
 
-type Drive struct {
+type DriveClient struct {
 	service *drive.Service
 }
 
-func New(client *http.Client) (*Drive, error) {
+func New(client *http.Client) (*DriveClient, error) {
 	service, err := drive.New(client)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Drive{service}, nil
+	return &DriveClient{service}, nil
 }

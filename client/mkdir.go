@@ -15,7 +15,7 @@ type MkdirArgs struct {
 	Parents     []string
 }
 
-func (self *Drive) Mkdir(args MkdirArgs) error {
+func (self *DriveClient) Mkdir(args MkdirArgs) error {
 	f, err := self.mkdir(args)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func (self *Drive) Mkdir(args MkdirArgs) error {
 	return nil
 }
 
-func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
+func (self *DriveClient) mkdir(args MkdirArgs) (*drive.File, error) {
 	dstFile := &drive.File{
 		Name:        args.Name,
 		Description: args.Description,

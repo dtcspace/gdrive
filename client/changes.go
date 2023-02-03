@@ -16,7 +16,7 @@ type ListChangesArgs struct {
 	SkipHeader bool
 }
 
-func (self *Drive) ListChanges(args ListChangesArgs) error {
+func (self *DriveClient) ListChanges(args ListChangesArgs) error {
 	if args.Now {
 		pageToken, err := self.GetChangesStartPageToken()
 		if err != nil {
@@ -42,7 +42,7 @@ func (self *Drive) ListChanges(args ListChangesArgs) error {
 	return nil
 }
 
-func (self *Drive) GetChangesStartPageToken() (string, error) {
+func (self *DriveClient) GetChangesStartPageToken() (string, error) {
 	res, err := self.service.Changes.GetStartPageToken().Do()
 	if err != nil {
 		return "", fmt.Errorf("Failed getting start page token: %s", err)

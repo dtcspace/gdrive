@@ -17,7 +17,7 @@ type ShareArgs struct {
 	Discoverable bool
 }
 
-func (self *Drive) Share(args ShareArgs) error {
+func (self *DriveClient) Share(args ShareArgs) error {
 	permission := &drive.Permission{
 		AllowFileDiscovery: args.Discoverable,
 		Role:               args.Role,
@@ -41,7 +41,7 @@ type RevokePermissionArgs struct {
 	PermissionId string
 }
 
-func (self *Drive) RevokePermission(args RevokePermissionArgs) error {
+func (self *DriveClient) RevokePermission(args RevokePermissionArgs) error {
 	err := self.service.Permissions.Delete(args.FileId, args.PermissionId).Do()
 	if err != nil {
 		fmt.Errorf("Failed to revoke permission: %s", err)
@@ -57,7 +57,7 @@ type ListPermissionsArgs struct {
 	FileId string
 }
 
-func (self *Drive) ListPermissions(args ListPermissionsArgs) error {
+func (self *DriveClient) ListPermissions(args ListPermissionsArgs) error {
 	permList, err := self.service.Permissions.List(args.FileId).Fields("permissions(id,role,type,domain,emailAddress,allowFileDiscovery)").Do()
 	if err != nil {
 		fmt.Errorf("Failed to list permissions: %s", err)
@@ -71,7 +71,7 @@ func (self *Drive) ListPermissions(args ListPermissionsArgs) error {
 	return nil
 }
 
-func (self *Drive) shareAnyoneReader(fileId string) error {
+func (self *DriveClient) shareAnyoneReader(fileId string) error {
 	permission := &drive.Permission{
 		Role: "reader",
 		Type: "anyone",

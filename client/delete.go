@@ -11,7 +11,7 @@ type DeleteArgs struct {
 	Recursive bool
 }
 
-func (self *Drive) Delete(args DeleteArgs) error {
+func (self *DriveClient) Delete(args DeleteArgs) error {
 	f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
@@ -30,7 +30,7 @@ func (self *Drive) Delete(args DeleteArgs) error {
 	return nil
 }
 
-func (self *Drive) deleteFile(fileId string) error {
+func (self *DriveClient) deleteFile(fileId string) error {
 	err := self.service.Files.Delete(fileId).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to delete file: %s", err)

@@ -25,7 +25,7 @@ type UploadSyncArgs struct {
 	Comparer         FileComparer
 }
 
-func (self *Drive) UploadSync(args UploadSyncArgs) error {
+func (self *DriveClient) UploadSync(args UploadSyncArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}
@@ -94,7 +94,7 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
 	return nil
 }
 
-func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
+func (self *DriveClient) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
 	f, err := self.service.Files.Get(args.RootId).Fields(fields...).Do()
 	if err != nil {
@@ -136,7 +136,7 @@ func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 	return f, nil
 }
 
-func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs) (*syncFiles, error) {
+func (self *DriveClient) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs) (*syncFiles, error) {
 	missingDirs := files.filterMissingRemoteDirs()
 	missingCount := len(missingDirs)
 
@@ -184,7 +184,7 @@ type createMissingRemoteDirArgs struct {
 	try      int
 }
 
-func (self *Drive) uploadMissingFiles(missingFiles []*LocalFile, files *syncFiles, args UploadSyncArgs) error {
+func (self *DriveClient) uploadMissingFiles(missingFiles []*LocalFile, files *syncFiles, args UploadSyncArgs) error {
 	missingCount := len(missingFiles)
 
 	if missingCount > 0 {
@@ -209,7 +209,7 @@ func (self *Drive) uploadMissingFiles(missingFiles []*LocalFile, files *syncFile
 	return nil
 }
 
-func (self *Drive) updateChangedFiles(changedFiles []*changedFile, root *drive.File, args UploadSyncArgs) error {
+func (self *DriveClient) updateChangedFiles(changedFiles []*changedFile, root *drive.File, args UploadSyncArgs) error {
 	changedCount := len(changedFiles)
 
 	if changedCount > 0 {
@@ -233,7 +233,7 @@ func (self *Drive) updateChangedFiles(changedFiles []*changedFile, root *drive.F
 	return nil
 }
 
-func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSyncArgs) error {
+func (self *DriveClient) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSyncArgs) error {
 	extraneousFiles := files.filterExtraneousRemoteFiles()
 	extraneousCount := len(extraneousFiles)
 
@@ -256,7 +256,7 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
 	return nil
 }
 
-func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*drive.File, error) {
+func (self *DriveClient) createMissingRemoteDir(args createMissingRemoteDirArgs) (*drive.File, error) {
 	dstFile := &drive.File{
 		Name:          args.name,
 		MimeType:      DirectoryMimeType,
@@ -282,7 +282,7 @@ func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*dri
 	return f, nil
 }
 
-func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args UploadSyncArgs, try int) error {
+func (self *DriveClient) uploadMissingFile(parentId string, lf *LocalFile, args UploadSyncArgs, try int) error {
 	if args.DryRun {
 		return nil
 	}
@@ -327,7 +327,7 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
 	return nil
 }
 
-func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try int) error {
+func (self *DriveClient) updateChangedFile(cf *changedFile, args UploadSyncArgs, try int) error {
 	if args.DryRun {
 		return nil
 	}
@@ -368,7 +368,7 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
 	return nil
 }
 
-func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int) error {
+func (self *DriveClient) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int) error {
 	if args.DryRun {
 		return nil
 	}
@@ -387,7 +387,7 @@ func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int
 	return nil
 }
 
-func (self *Drive) dirIsEmpty(id string) (bool, error) {
+func (self *DriveClient) dirIsEmpty(id string) (bool, error) {
 	query := fmt.Sprintf("'%s' in parents", id)
 	fileList, err := self.service.Files.List().Q(query).Do()
 	if err != nil {
@@ -449,7 +449,7 @@ func ensureNoRemoteModifications(files []*changedFile) error {
 	return fmt.Errorf(buffer.String())
 }
 
-func (self *Drive) checkRemoteFreeSpace(missingFiles []*LocalFile, changedFiles []*changedFile) (bool, string) {
+func (self *DriveClient) checkRemoteFreeSpace(missingFiles []*LocalFile, changedFiles []*changedFile) (bool, string) {
 	about, err := self.service.About.Get().Fields("storageQuota").Do()
 	if err != nil {
 		return false, fmt.Sprintf("Failed to determine free space: %s", err)
