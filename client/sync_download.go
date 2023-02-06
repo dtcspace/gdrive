@@ -24,18 +24,18 @@ type DownloadSyncArgs struct {
 	Comparer         FileComparer
 }
 
-func (self *DriveClient) DownloadSync(args DownloadSyncArgs) error {
+func (client *DriveClient) DownloadSync(args DownloadSyncArgs) error {
 	fmt.Fprintln(args.Out, "Starting sync...")
 	started := time.Now()
 
 	// Get remote root dir
-	rootDir, err := self.getSyncRoot(args.RootId)
+	rootDir, err := client.getSyncRoot(args.RootId)
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintln(args.Out, "Collecting file information...")
-	files, err := self.prepareSyncFiles(args.Path, rootDir, args.Comparer)
+	files, err := client.prepareSyncFiles(args.Path, rootDir, args.Comparer)
 	if err != nil {
 		return err
 	}
@@ -54,26 +54,26 @@ func (self *DriveClient) DownloadSync(args DownloadSyncArgs) error {
 	}
 
 	// Create missing directories
-	err = self.createMissingLocalDirs(files, args)
+	err = client.createMissingLocalDirs(files, args)
 	if err != nil {
 		return err
 	}
 
 	// Download missing files
-	err = self.downloadMissingFiles(files, args)
+	err = client.downloadMissingFiles(files, args)
 	if err != nil {
 		return err
 	}
 
 	// Download files that has changed
-	err = self.downloadChangedFiles(changedFiles, args)
+	err = client.downloadChangedFiles(changedFiles, args)
 	if err != nil {
 		return err
 	}
 
 	// Delete extraneous local files
 	if args.DeleteExtraneous {
-		err = self.deleteExtraneousLocalFiles(files, args)
+		err = client.deleteExtraneousLocalFiles(files, args)
 		if err != nil {
 			return err
 		}
@@ -83,9 +83,9 @@ func (self *DriveClient) DownloadSync(args DownloadSyncArgs) error {
 	return nil
 }
 
-func (self *DriveClient) getSyncRoot(rootId string) (*drive.File, error) {
+func (client *DriveClient) getSyncRoot(rootId string) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
-	f, err := self.service.Files.Get(rootId).Fields(fields...).Do()
+	f, err := client.service.Files.Get(rootId).Fields(fields...).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to find root dir: %s", err)
 	}
@@ -103,7 +103,7 @@ func (self *DriveClient) getSyncRoot(rootId string) (*drive.File, error) {
 	return f, nil
 }
 
-func (self *DriveClient) createMissingLocalDirs(files *syncFiles, args DownloadSyncArgs) error {
+func (client *DriveClient) createMissingLocalDirs(files *syncFiles, args DownloadSyncArgs) error {
 	missingDirs := files.filterMissingLocalDirs()
 	missingCount := len(missingDirs)
 
@@ -131,7 +131,7 @@ func (self *DriveClient) createMissingLocalDirs(files *syncFiles, args DownloadS
 	return nil
 }
 
-func (self *DriveClient) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs) error {
+func (client *DriveClient) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs) error {
 	missingFiles := files.filterMissingLocalFiles()
 	missingCount := len(missingFiles)
 
@@ -146,7 +146,7 @@ func (self *DriveClient) downloadMissingFiles(files *syncFiles, args DownloadSyn
 		}
 		fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i+1, missingCount, rf.relPath, filepath.Join(filepath.Base(args.Path), rf.relPath))
 
-		err = self.downloadRemoteFile(rf.file.Id, absPath, args, 0)
+		err = client.downloadRemoteFile(rf.file.Id, absPath, args, 0)
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func (self *DriveClient) downloadMissingFiles(files *syncFiles, args DownloadSyn
 	return nil
 }
 
-func (self *DriveClient) downloadChangedFiles(changedFiles []*changedFile, args DownloadSyncArgs) error {
+func (client *DriveClient) downloadChangedFiles(changedFiles []*changedFile, args DownloadSyncArgs) error {
 	changedCount := len(changedFiles)
 
 	if changedCount > 0 {
@@ -174,7 +174,7 @@ func (self *DriveClient) downloadChangedFiles(changedFiles []*changedFile, args 
 		}
 		fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i+1, changedCount, cf.remote.relPath, filepath.Join(filepath.Base(args.Path), cf.remote.relPath))
 
-		err = self.downloadRemoteFile(cf.remote.file.Id, absPath, args, 0)
+		err = client.downloadRemoteFile(cf.remote.file.Id, absPath, args, 0)
 		if err != nil {
 			return err
 		}
@@ -183,7 +183,7 @@ func (self *DriveClient) downloadChangedFiles(changedFiles []*changedFile, args 
 	return nil
 }
 
-func (self *DriveClient) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, try int) error {
+func (client *DriveClient) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, try int) error {
 	if args.DryRun {
 		return nil
 	}
@@ -191,12 +191,12 @@ func (self *DriveClient) downloadRemoteFile(id, fpath string, args DownloadSyncA
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
-	res, err := self.service.Files.Get(id).Context(ctx).Download()
+	res, err := client.service.Files.Get(id).Context(ctx).Download()
 	if err != nil {
 		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
 			try++
-			return self.downloadRemoteFile(id, fpath, args, try)
+			return client.downloadRemoteFile(id, fpath, args, try)
 		} else if isTimeoutError(err) {
 			return fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
 		} else {
@@ -234,7 +234,7 @@ func (self *DriveClient) downloadRemoteFile(id, fpath string, args DownloadSyncA
 		if try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
 			try++
-			return self.downloadRemoteFile(id, fpath, args, try)
+			return client.downloadRemoteFile(id, fpath, args, try)
 		} else {
 			os.Remove(tmpPath)
 			return fmt.Errorf("Download was interrupted: %s", err)
@@ -248,7 +248,7 @@ func (self *DriveClient) downloadRemoteFile(id, fpath string, args DownloadSyncA
 	return os.Rename(tmpPath, fpath)
 }
 
-func (self *DriveClient) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyncArgs) error {
+func (client *DriveClient) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyncArgs) error {
 	extraneousFiles := files.filterExtraneousLocalFiles()
 	extraneousCount := len(extraneousFiles)
 

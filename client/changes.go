@@ -16,9 +16,9 @@ type ListChangesArgs struct {
 	SkipHeader bool
 }
 
-func (self *DriveClient) ListChanges(args ListChangesArgs) error {
+func (client *DriveClient) ListChanges(args ListChangesArgs) error {
 	if args.Now {
-		pageToken, err := self.GetChangesStartPageToken()
+		pageToken, err := client.GetChangesStartPageToken()
 		if err != nil {
 			return err
 		}
@@ -27,7 +27,7 @@ func (self *DriveClient) ListChanges(args ListChangesArgs) error {
 		return nil
 	}
 
-	changeList, err := self.service.Changes.List(args.PageToken).PageSize(args.MaxChanges).RestrictToMyDrive(true).Fields("newStartPageToken", "nextPageToken", "changes(fileId,removed,time,file(id,name,md5Checksum,mimeType,createdTime,modifiedTime))").Do()
+	changeList, err := client.service.Changes.List(args.PageToken).PageSize(args.MaxChanges).RestrictToMyDrive(true).Fields("newStartPageToken", "nextPageToken", "changes(fileId,removed,time,file(id,name,md5Checksum,mimeType,createdTime,modifiedTime))").Do()
 	if err != nil {
 		return fmt.Errorf("Failed listing changes: %s", err)
 	}
@@ -42,8 +42,8 @@ func (self *DriveClient) ListChanges(args ListChangesArgs) error {
 	return nil
 }
 
-func (self *DriveClient) GetChangesStartPageToken() (string, error) {
-	res, err := self.service.Changes.GetStartPageToken().Do()
+func (client *DriveClient) GetChangesStartPageToken() (string, error) {
+	res, err := client.service.Changes.GetStartPageToken().Do()
 	if err != nil {
 		return "", fmt.Errorf("Failed getting start page token: %s", err)
 	}

@@ -17,7 +17,7 @@ type ImportArgs struct {
 	Parents  []string
 }
 
-func (self *DriveClient) Import(args ImportArgs) error {
+func (client *DriveClient) Import(args ImportArgs) error {
 	fromMime := args.Mime
 	if fromMime == "" {
 		fromMime = getMimeType(args.Path)
@@ -26,7 +26,7 @@ func (self *DriveClient) Import(args ImportArgs) error {
 		return fmt.Errorf("Could not determine mime type of file, use --mime")
 	}
 
-	about, err := self.service.About.Get().Fields("importFormats").Do()
+	about, err := client.service.About.Get().Fields("importFormats").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get about: %s", err)
 	}
@@ -36,7 +36,7 @@ func (self *DriveClient) Import(args ImportArgs) error {
 		return fmt.Errorf("Mime type '%s' is not supported for import", fromMime)
 	}
 
-	f, _, err := self.uploadFile(UploadArgs{
+	f, _, err := client.uploadFile(UploadArgs{
 		Out:      ioutil.Discard,
 		Progress: args.Progress,
 		Path:     args.Path,

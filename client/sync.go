@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
 	"github.com/sabhiram/go-gitignore"
 	"github.com/soniakeys/graph"
 	"google.golang.org/api/drive/v3"
@@ -41,7 +42,7 @@ const (
 	KeepLargest
 )
 
-func (self *DriveClient) prepareSyncFiles(localPath string, root *drive.File, cmp FileComparer) (*syncFiles, error) {
+func (client *DriveClient) prepareSyncFiles(localPath string, root *drive.File, cmp FileComparer) (*syncFiles, error) {
 	localCh := make(chan struct {
 		files []*LocalFile
 		err   error
@@ -60,7 +61,7 @@ func (self *DriveClient) prepareSyncFiles(localPath string, root *drive.File, cm
 	}()
 
 	go func() {
-		files, err := self.prepareRemoteFiles(root, "")
+		files, err := client.prepareRemoteFiles(root, "")
 		remoteCh <- struct {
 			files []*RemoteFile
 			err   error
@@ -85,8 +86,9 @@ func (self *DriveClient) prepareSyncFiles(localPath string, root *drive.File, cm
 	}, nil
 }
 
-func (self *DriveClient) isSyncFile(id string) (bool, error) {
-	f, err := self.service.Files.Get(id).Fields("appProperties").Do()
+func (client *DriveClient) isSyncFile(id string) (bool, error) {
+	call := disk.SwitchFilesGetDrive(client.service.Files.Get(id))
+	f, err := call.Fields("appProperties").Do()
 	if err != nil {
 		return false, fmt.Errorf("Failed to get file: %s", err)
 	}
@@ -152,14 +154,14 @@ func prepareLocalFiles(root string) ([]*LocalFile, error) {
 	return files, err
 }
 
-func (self *DriveClient) prepareRemoteFiles(rootDir *drive.File, sortOrder string) ([]*RemoteFile, error) {
+func (client *DriveClient) prepareRemoteFiles(rootDir *drive.File, sortOrder string) ([]*RemoteFile, error) {
 	// Find all files which has rootDir as root
 	listArgs := listAllFilesArgs{
 		query:     fmt.Sprintf("appProperties has {key='syncRootId' and value='%s'}", rootDir.Id),
 		fields:    []googleapi.Field{"nextPageToken", "files(id,name,parents,md5Checksum,mimeType,size,modifiedTime)"},
 		sortOrder: sortOrder,
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := client.listAllFiles(listArgs)
 	if err != nil {
 		return nil, fmt.Errorf("Failed listing files: %s", err)
 	}

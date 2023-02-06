@@ -17,7 +17,7 @@ type ShareArgs struct {
 	Discoverable bool
 }
 
-func (self *DriveClient) Share(args ShareArgs) error {
+func (client *DriveClient) Share(args ShareArgs) error {
 	permission := &drive.Permission{
 		AllowFileDiscovery: args.Discoverable,
 		Role:               args.Role,
@@ -26,7 +26,7 @@ func (self *DriveClient) Share(args ShareArgs) error {
 		Domain:             args.Domain,
 	}
 
-	_, err := self.service.Permissions.Create(args.FileId, permission).Do()
+	_, err := client.service.Permissions.Create(args.FileId, permission).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}
@@ -41,8 +41,8 @@ type RevokePermissionArgs struct {
 	PermissionId string
 }
 
-func (self *DriveClient) RevokePermission(args RevokePermissionArgs) error {
-	err := self.service.Permissions.Delete(args.FileId, args.PermissionId).Do()
+func (client *DriveClient) RevokePermission(args RevokePermissionArgs) error {
+	err := client.service.Permissions.Delete(args.FileId, args.PermissionId).Do()
 	if err != nil {
 		fmt.Errorf("Failed to revoke permission: %s", err)
 		return err
@@ -57,8 +57,8 @@ type ListPermissionsArgs struct {
 	FileId string
 }
 
-func (self *DriveClient) ListPermissions(args ListPermissionsArgs) error {
-	permList, err := self.service.Permissions.List(args.FileId).Fields("permissions(id,role,type,domain,emailAddress,allowFileDiscovery)").Do()
+func (client *DriveClient) ListPermissions(args ListPermissionsArgs) error {
+	permList, err := client.service.Permissions.List(args.FileId).Fields("permissions(id,role,type,domain,emailAddress,allowFileDiscovery)").Do()
 	if err != nil {
 		fmt.Errorf("Failed to list permissions: %s", err)
 		return err
@@ -71,13 +71,13 @@ func (self *DriveClient) ListPermissions(args ListPermissionsArgs) error {
 	return nil
 }
 
-func (self *DriveClient) shareAnyoneReader(fileId string) error {
+func (client *DriveClient) shareAnyoneReader(fileId string) error {
 	permission := &drive.Permission{
 		Role: "reader",
 		Type: "anyone",
 	}
 
-	_, err := self.service.Permissions.Create(fileId, permission).Do()
+	_, err := client.service.Permissions.Create(fileId, permission).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}

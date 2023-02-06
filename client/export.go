@@ -24,14 +24,14 @@ type ExportArgs struct {
 	Force      bool
 }
 
-func (self *DriveClient) Export(args ExportArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
+func (client *DriveClient) Export(args ExportArgs) error {
+	f, err := client.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
 	if args.PrintMimes {
-		return self.printMimes(args.Out, f.MimeType)
+		return client.printMimes(args.Out, f.MimeType)
 	}
 
 	exportMime, err := getExportMime(args.Mime, f.MimeType)
@@ -41,7 +41,7 @@ func (self *DriveClient) Export(args ExportArgs) error {
 
 	filename := getExportFilename(f.Name, exportMime)
 
-	res, err := self.service.Files.Export(args.Id, exportMime).Download()
+	res, err := client.service.Files.Export(args.Id, exportMime).Download()
 	if err != nil {
 		return fmt.Errorf("Failed to download file: %s", err)
 	}
@@ -73,8 +73,8 @@ func (self *DriveClient) Export(args ExportArgs) error {
 	return nil
 }
 
-func (self *DriveClient) printMimes(out io.Writer, mimeType string) error {
-	about, err := self.service.About.Get().Fields("exportFormats").Do()
+func (client *DriveClient) printMimes(out io.Writer, mimeType string) error {
+	about, err := client.service.About.Get().Fields("exportFormats").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get about: %s", err)
 	}

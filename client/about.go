@@ -11,8 +11,8 @@ type AboutArgs struct {
 	SizeInBytes bool
 }
 
-func (self *DriveClient) About(args AboutArgs) (err error) {
-	about, err := self.service.About.Get().Fields("maxImportSizes", "maxUploadSize", "storageQuota", "user").Do()
+func (client *DriveClient) About(args AboutArgs) (err error) {
+	about, err := client.service.About.Get().Fields("maxImportSizes", "maxUploadSize", "storageQuota", "user").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get about: %s", err)
 	}
@@ -32,8 +32,8 @@ type AboutImportArgs struct {
 	Out io.Writer
 }
 
-func (self *DriveClient) AboutImport(args AboutImportArgs) (err error) {
-	about, err := self.service.About.Get().Fields("importFormats").Do()
+func (client *DriveClient) AboutImport(args AboutImportArgs) (err error) {
+	about, err := client.service.About.Get().Fields("importFormats").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get about: %s", err)
 	}
@@ -45,8 +45,8 @@ type AboutExportArgs struct {
 	Out io.Writer
 }
 
-func (self *DriveClient) AboutExport(args AboutExportArgs) (err error) {
-	about, err := self.service.About.Get().Fields("exportFormats").Do()
+func (client *DriveClient) AboutExport(args AboutExportArgs) (err error) {
+	about, err := client.service.About.Get().Fields("exportFormats").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get about: %s", err)
 	}

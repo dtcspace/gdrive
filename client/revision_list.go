@@ -15,8 +15,8 @@ type ListRevisionsArgs struct {
 	SizeInBytes bool
 }
 
-func (self *DriveClient) ListRevisions(args ListRevisionsArgs) (err error) {
-	revList, err := self.service.Revisions.List(args.Id).Fields("revisions(id,keepForever,size,modifiedTime,originalFilename)").Do()
+func (client *DriveClient) ListRevisions(args ListRevisionsArgs) (err error) {
+	revList, err := client.service.Revisions.List(args.Id).Fields("revisions(id,keepForever,size,modifiedTime,originalFilename)").Do()
 	if err != nil {
 		return fmt.Errorf("Failed listing revisions: %s", err)
 	}

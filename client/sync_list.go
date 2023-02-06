@@ -14,12 +14,12 @@ type ListSyncArgs struct {
 	SkipHeader bool
 }
 
-func (self *DriveClient) ListSync(args ListSyncArgs) error {
+func (client *DriveClient) ListSync(args ListSyncArgs) error {
 	listArgs := listAllFilesArgs{
 		query:  "appProperties has {key='syncRoot' and value='true'}",
 		fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,createdTime)"},
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := client.listAllFiles(listArgs)
 	if err != nil {
 		return err
 	}
@@ -36,13 +36,13 @@ type ListRecursiveSyncArgs struct {
 	SortOrder   string
 }
 
-func (self *DriveClient) ListRecursiveSync(args ListRecursiveSyncArgs) error {
-	rootDir, err := self.getSyncRoot(args.RootId)
+func (client *DriveClient) ListRecursiveSync(args ListRecursiveSyncArgs) error {
+	rootDir, err := client.getSyncRoot(args.RootId)
 	if err != nil {
 		return err
 	}
 
-	files, err := self.prepareRemoteFiles(rootDir, args.SortOrder)
+	files, err := client.prepareRemoteFiles(rootDir, args.SortOrder)
 	if err != nil {
 		return err
 	}

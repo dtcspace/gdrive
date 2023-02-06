@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
 	"io"
@@ -26,14 +27,14 @@ type UploadArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *DriveClient) Upload(args UploadArgs) error {
+func (client *DriveClient) Upload(args UploadArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}
 
 	// Ensure that none of the parents are sync dirs
 	for _, parent := range args.Parents {
-		isSyncDir, err := self.isSyncFile(parent)
+		isSyncDir, err := client.isSyncFile(parent)
 		if err != nil {
 			return err
 		}
@@ -44,7 +45,7 @@ func (self *DriveClient) Upload(args UploadArgs) error {
 	}
 
 	if args.Recursive {
-		return self.uploadRecursive(args)
+		return client.uploadRecursive(args)
 	}
 
 	info, err := os.Stat(args.Path)
@@ -56,14 +57,14 @@ func (self *DriveClient) Upload(args UploadArgs) error {
 		return fmt.Errorf("'%s' is a directory, use --recursive to upload directories", info.Name())
 	}
 
-	f, rate, err := self.uploadFile(args)
+	f, rate, err := client.uploadFile(args)
 	if err != nil {
 		return err
 	}
 	fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
 
 	if args.Share {
-		err = self.shareAnyoneReader(f.Id)
+		err = client.shareAnyoneReader(f.Id)
 		if err != nil {
 			return err
 		}
@@ -82,7 +83,7 @@ func (self *DriveClient) Upload(args UploadArgs) error {
 	return nil
 }
 
-func (self *DriveClient) uploadRecursive(args UploadArgs) error {
+func (client *DriveClient) uploadRecursive(args UploadArgs) error {
 	info, err := os.Stat(args.Path)
 	if err != nil {
 		return fmt.Errorf("Failed stat file: %s", err)
@@ -90,16 +91,16 @@ func (self *DriveClient) uploadRecursive(args UploadArgs) error {
 
 	if info.IsDir() {
 		args.Name = ""
-		return self.uploadDirectory(args)
+		return client.uploadDirectory(args)
 	} else if info.Mode().IsRegular() {
-		_, _, err := self.uploadFile(args)
+		_, _, err := client.uploadFile(args)
 		return err
 	}
 
 	return nil
 }
 
-func (self *DriveClient) uploadDirectory(args UploadArgs) error {
+func (client *DriveClient) uploadDirectory(args UploadArgs) error {
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return err
@@ -110,7 +111,7 @@ func (self *DriveClient) uploadDirectory(args UploadArgs) error {
 
 	fmt.Fprintf(args.Out, "Creating directory %s\n", srcFileInfo.Name())
 	// Make directory on drive
-	f, err := self.mkdir(MkdirArgs{
+	f, err := client.mkdir(MkdirArgs{
 		Out:         args.Out,
 		Name:        srcFileInfo.Name(),
 		Parents:     args.Parents,
@@ -134,7 +135,7 @@ func (self *DriveClient) uploadDirectory(args UploadArgs) error {
 		newArgs.Description = ""
 
 		// Upload
-		err = self.uploadRecursive(newArgs)
+		err = client.uploadRecursive(newArgs)
 		if err != nil {
 			return err
 		}
@@ -143,7 +144,7 @@ func (self *DriveClient) uploadDirectory(args UploadArgs) error {
 	return nil
 }
 
-func (self *DriveClient) uploadFile(args UploadArgs) (*drive.File, int64, error) {
+func (client *DriveClient) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return nil, 0, err
@@ -184,7 +185,8 @@ func (self *DriveClient) uploadFile(args UploadArgs) (*drive.File, int64, error)
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()
 
-	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
+	call := disk.SwitchFilesCreateDrive(client.service.Files.Create(dstFile))
+	f, err := call.Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
@@ -211,7 +213,7 @@ type UploadStreamArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *DriveClient) UploadStream(args UploadStreamArgs) error {
+func (client *DriveClient) UploadStream(args UploadStreamArgs) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}
@@ -239,7 +241,7 @@ func (self *DriveClient) UploadStream(args UploadStreamArgs) error {
 	fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
 	started := time.Now()
 
-	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
+	f, err := client.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
@@ -252,7 +254,7 @@ func (self *DriveClient) UploadStream(args UploadStreamArgs) error {
 
 	fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
 	if args.Share {
-		err = self.shareAnyoneReader(f.Id)
+		err = client.shareAnyoneReader(f.Id)
 		if err != nil {
 			return err
 		}

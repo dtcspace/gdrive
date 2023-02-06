@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
 	"google.golang.org/api/drive/v3"
 	"io"
 )
@@ -15,8 +16,8 @@ type MkdirArgs struct {
 	Parents     []string
 }
 
-func (self *DriveClient) Mkdir(args MkdirArgs) error {
-	f, err := self.mkdir(args)
+func (client *DriveClient) Mkdir(args MkdirArgs) error {
+	f, err := client.mkdir(args)
 	if err != nil {
 		return err
 	}
@@ -24,7 +25,7 @@ func (self *DriveClient) Mkdir(args MkdirArgs) error {
 	return nil
 }
 
-func (self *DriveClient) mkdir(args MkdirArgs) (*drive.File, error) {
+func (client *DriveClient) mkdir(args MkdirArgs) (*drive.File, error) {
 	dstFile := &drive.File{
 		Name:        args.Name,
 		Description: args.Description,
@@ -35,7 +36,8 @@ func (self *DriveClient) mkdir(args MkdirArgs) (*drive.File, error) {
 	dstFile.Parents = args.Parents
 
 	// Create directory
-	f, err := self.service.Files.Create(dstFile).Do()
+	call := disk.SwitchFilesCreateDrive(client.service.Files.Create(dstFile))
+	f, err := call.Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create directory: %s", err)
 	}

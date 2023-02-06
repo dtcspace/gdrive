@@ -11,8 +11,8 @@ type DeleteArgs struct {
 	Recursive bool
 }
 
-func (self *DriveClient) Delete(args DeleteArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
+func (client *DriveClient) Delete(args DeleteArgs) error {
+	f, err := client.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
@@ -21,7 +21,7 @@ func (self *DriveClient) Delete(args DeleteArgs) error {
 		return fmt.Errorf("'%s' is a directory, use the 'recursive' flag to delete directories", f.Name)
 	}
 
-	err = self.service.Files.Delete(args.Id).Do()
+	err = client.service.Files.Delete(args.Id).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to delete file: %s", err)
 	}
@@ -30,8 +30,8 @@ func (self *DriveClient) Delete(args DeleteArgs) error {
 	return nil
 }
 
-func (self *DriveClient) deleteFile(fileId string) error {
-	err := self.service.Files.Delete(fileId).Do()
+func (client *DriveClient) deleteFile(fileId string) error {
+	err := client.service.Files.Delete(fileId).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to delete file: %s", err)
 	}

@@ -12,13 +12,13 @@ type FileInfoArgs struct {
 	SizeInBytes bool
 }
 
-func (self *DriveClient) Info(args FileInfoArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
+func (client *DriveClient) Info(args FileInfoArgs) error {
+	f, err := client.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
-	pathfinder := self.newPathfinder()
+	pathfinder := client.newPathfinder()
 	absPath, err := pathfinder.absPath(f)
 	if err != nil {
 		return err

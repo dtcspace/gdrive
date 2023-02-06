@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
 	"golang.org/x/net/context"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
@@ -20,19 +21,19 @@ type ListFilesArgs struct {
 	AbsPath     bool
 }
 
-func (self *DriveClient) List(args ListFilesArgs) (err error) {
+func (client *DriveClient) List(args ListFilesArgs) (err error) {
 	listArgs := listAllFilesArgs{
 		query:     args.Query,
 		fields:    []googleapi.Field{"nextPageToken", "files(id,name,md5Checksum,mimeType,size,createdTime,parents)"},
 		sortOrder: args.SortOrder,
 		maxFiles:  args.MaxFiles,
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := client.listAllFiles(listArgs)
 	if err != nil {
 		return fmt.Errorf("Failed to list files: %s", err)
 	}
 
-	pathfinder := self.newPathfinder()
+	pathfinder := client.newPathfinder()
 
 	if args.AbsPath {
 		// Replace name with absolute path
@@ -62,7 +63,7 @@ type listAllFilesArgs struct {
 	maxFiles  int64
 }
 
-func (self *DriveClient) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
+func (client *DriveClient) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
 	var files []*drive.File
 
 	var pageSize int64
@@ -74,7 +75,8 @@ func (self *DriveClient) listAllFiles(args listAllFilesArgs) ([]*drive.File, err
 
 	controlledStop := fmt.Errorf("Controlled stop")
 
-	err := self.service.Files.List().Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
+	call := disk.SwitchFilesListDrive(client.service.Files.List())
+	err := call.Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
 		files = append(files, fl.Files...)
 
 		// Stop when we have all the files we need

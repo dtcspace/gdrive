@@ -19,8 +19,8 @@ type DownloadRevisionArgs struct {
 	Timeout    time.Duration
 }
 
-func (self *DriveClient) DownloadRevision(args DownloadRevisionArgs) (err error) {
-	getRev := self.service.Revisions.Get(args.FileId, args.RevisionId)
+func (client *DriveClient) DownloadRevision(args DownloadRevisionArgs) (err error) {
+	getRev := client.service.Revisions.Get(args.FileId, args.RevisionId)
 
 	rev, err := getRev.Fields("originalFilename").Do()
 	if err != nil {
@@ -56,7 +56,7 @@ func (self *DriveClient) DownloadRevision(args DownloadRevisionArgs) (err error)
 
 	fmt.Fprintf(out, "Downloading %s -> %s\n", rev.OriginalFilename, fpath)
 
-	bytes, rate, err := self.saveFile(saveFileArgs{
+	bytes, rate, err := client.saveFile(saveFileArgs{
 		out:           args.Out,
 		body:          timeoutReaderWrapper(res.Body),
 		contentLength: res.ContentLength,

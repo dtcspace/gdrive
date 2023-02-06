@@ -24,12 +24,12 @@ type DownloadArgs struct {
 	Timeout   time.Duration
 }
 
-func (self *DriveClient) Download(args DownloadArgs) error {
+func (client *DriveClient) Download(args DownloadArgs) error {
 	if args.Recursive {
-		return self.downloadRecursive(args)
+		return client.downloadRecursive(args)
 	}
 
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+	f, err := client.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
@@ -42,7 +42,7 @@ func (self *DriveClient) Download(args DownloadArgs) error {
 		return fmt.Errorf("'%s' is a google document and must be exported, see the export command", f.Name)
 	}
 
-	bytes, rate, err := self.downloadBinary(f, args)
+	bytes, rate, err := client.downloadBinary(f, args)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (self *DriveClient) Download(args DownloadArgs) error {
 	}
 
 	if args.Delete {
-		err = self.deleteFile(args.Id)
+		err = client.deleteFile(args.Id)
 		if err != nil {
 			return fmt.Errorf("Failed to delete file: %s", err)
 		}
@@ -74,12 +74,12 @@ type DownloadQueryArgs struct {
 	Recursive bool
 }
 
-func (self *DriveClient) DownloadQuery(args DownloadQueryArgs) error {
+func (client *DriveClient) DownloadQuery(args DownloadQueryArgs) error {
 	listArgs := listAllFilesArgs{
 		query:  args.Query,
 		fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,size,md5Checksum)"},
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := client.listAllFiles(listArgs)
 	if err != nil {
 		return fmt.Errorf("Failed to list files: %s", err)
 	}
@@ -94,9 +94,9 @@ func (self *DriveClient) DownloadQuery(args DownloadQueryArgs) error {
 
 	for _, f := range files {
 		if isDir(f) && args.Recursive {
-			err = self.downloadDirectory(f, downloadArgs)
+			err = client.downloadDirectory(f, downloadArgs)
 		} else if isBinary(f) {
-			_, _, err = self.downloadBinary(f, downloadArgs)
+			_, _, err = client.downloadBinary(f, downloadArgs)
 		}
 
 		if err != nil {
@@ -107,27 +107,27 @@ func (self *DriveClient) DownloadQuery(args DownloadQueryArgs) error {
 	return nil
 }
 
-func (self *DriveClient) downloadRecursive(args DownloadArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+func (client *DriveClient) downloadRecursive(args DownloadArgs) error {
+	f, err := client.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
 	if isDir(f) {
-		return self.downloadDirectory(f, args)
+		return client.downloadDirectory(f, args)
 	} else if isBinary(f) {
-		_, _, err = self.downloadBinary(f, args)
+		_, _, err = client.downloadBinary(f, args)
 		return err
 	}
 
 	return nil
 }
 
-func (self *DriveClient) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
+func (client *DriveClient) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
-	res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
+	res, err := client.service.Files.Get(f.Id).Context(ctx).Download()
 	if err != nil {
 		if isTimeoutError(err) {
 			return 0, 0, fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
@@ -145,7 +145,7 @@ func (self *DriveClient) downloadBinary(f *drive.File, args DownloadArgs) (int64
 		fmt.Fprintf(args.Out, "Downloading %s -> %s\n", f.Name, fpath)
 	}
 
-	return self.saveFile(saveFileArgs{
+	return client.saveFile(saveFileArgs{
 		out:           args.Out,
 		body:          timeoutReaderWrapper(res.Body),
 		contentLength: res.ContentLength,
@@ -168,7 +168,7 @@ type saveFileArgs struct {
 	progress      io.Writer
 }
 
-func (self *DriveClient) saveFile(args saveFileArgs) (int64, int64, error) {
+func (client *DriveClient) saveFile(args saveFileArgs) (int64, int64, error) {
 	// Wrap response body in progress reader
 	srcReader := getProgressReader(args.body, args.progress, args.contentLength)
 
@@ -223,12 +223,12 @@ func (self *DriveClient) saveFile(args saveFileArgs) (int64, int64, error) {
 	return bytes, rate, os.Rename(tmpPath, args.fpath)
 }
 
-func (self *DriveClient) downloadDirectory(parent *drive.File, args DownloadArgs) error {
+func (client *DriveClient) downloadDirectory(parent *drive.File, args DownloadArgs) error {
 	listArgs := listAllFilesArgs{
 		query:  fmt.Sprintf("'%s' in parents", parent.Id),
 		fields: []googleapi.Field{"nextPageToken", "files(id,name)"},
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := client.listAllFiles(listArgs)
 	if err != nil {
 		return fmt.Errorf("Failed listing files: %s", err)
 	}
@@ -242,7 +242,7 @@ func (self *DriveClient) downloadDirectory(parent *drive.File, args DownloadArgs
 		newArgs.Id = f.Id
 		newArgs.Stdout = false
 
-		err = self.downloadRecursive(newArgs)
+		err = client.downloadRecursive(newArgs)
 		if err != nil {
 			return err
 		}
