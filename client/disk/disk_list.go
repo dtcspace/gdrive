@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-func (client *MyDisk) List() (err error) {
-	d,err := client.service.Drives.List().Do()
+func (call *MyDiskCall) List() (err error) {
+	d,err := call.Drives.List().Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve drives: %v", err)
 	}

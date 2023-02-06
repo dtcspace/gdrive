@@ -4,10 +4,10 @@ import (
 	"google.golang.org/api/drive/v3"
 )
 
-type MyDisk struct {
-	service *drive.Service
+type MyDiskCall struct {
+	*drive.Service
 }
 
-func New(service *drive.Service) *MyDisk {
-	return &MyDisk{service}
+func New(service *drive.Service) *MyDiskCall {
+	return &MyDiskCall{service}
 }
