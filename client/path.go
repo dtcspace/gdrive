@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
 	"google.golang.org/api/drive/v3"
 	"path/filepath"
 )
@@ -53,7 +54,8 @@ func (self *remotePathfinder) getParent(id string) (*drive.File, error) {
 	}
 
 	// Fetch file from drive
-	f, err := self.service.Get(id).Fields("id", "name", "parents").Do()
+	call := disk.SwitchFilesGetDrive(self.service.Get(id))
+	f, err := call.Fields("id", "name", "parents").Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get file: %s", err)
 	}

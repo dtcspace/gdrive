@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
 	"google.golang.org/api/drive/v3"
 	"io"
 )
@@ -13,7 +14,8 @@ type FileInfoArgs struct {
 }
 
 func (client *DriveClient) Info(args FileInfoArgs) error {
-	f, err := client.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
+	call := disk.SwitchFilesGetDrive(client.service.Files.Get(args.Id))
+	f, err := call.Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}

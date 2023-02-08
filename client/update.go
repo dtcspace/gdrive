@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/prasmussen/gdrive/client/disk"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
 	"io"
@@ -64,7 +65,8 @@ func (client *DriveClient) Update(args UpdateArgs) error {
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()
 
-	f, err := client.service.Files.Update(args.Id, dstFile).Fields("id", "name", "size").Context(ctx).Media(reader, chunkSize).Do()
+	call := disk.SwitchFilesUpdateDrive(client.service.Files.Update(args.Id, dstFile))
+	f, err := call.Fields("id", "name", "size").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)

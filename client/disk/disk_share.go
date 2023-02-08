@@ -15,6 +15,11 @@ func SwitchFilesCreateDrive(call *drive.FilesCreateCall) *drive.FilesCreateCall 
 	return call
 }
 
+func SwitchFilesUpdateDrive(call *drive.FilesUpdateCall) *drive.FilesUpdateCall {
+	call.SupportsAllDrives(true)
+	return call
+}
+
 func SwitchFilesGetDrive(call *drive.FilesGetCall) *drive.FilesGetCall {
 	call.SupportsAllDrives(true)
 	return call
