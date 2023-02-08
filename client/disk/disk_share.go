@@ -6,14 +6,16 @@ func SwitchFilesListDrive(call *drive.FilesListCall) *drive.FilesListCall {
 	call.Corpora("drive")
 	call.IncludeItemsFromAllDrives(true)
 	call.TeamDriveId("0AG5icJJpNXAKUk9PVA")
-	return call.SupportsAllDrives(true)
-
+	call.SupportsAllDrives(true)
+	return call
 }
 
 func SwitchFilesCreateDrive(call *drive.FilesCreateCall) *drive.FilesCreateCall {
-	return call.SupportsAllDrives(true)
+	call.SupportsAllDrives(true)
+	return call
 }
 
 func SwitchFilesGetDrive(call *drive.FilesGetCall) *drive.FilesGetCall {
-	return call.SupportsAllDrives(true)
+	call.SupportsAllDrives(true)
+	return call
 }
